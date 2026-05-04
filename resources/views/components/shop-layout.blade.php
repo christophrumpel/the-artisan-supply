@@ -27,8 +27,8 @@
             </a>
             <nav class="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] p-1 text-sm text-stone-300 backdrop-blur">
                 <a href="{{ route('home') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Shop</a>
+                <a href="{{ route('studio') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Studio</a>
                 <a href="{{ route('support') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Support</a>
-                <span class="hidden rounded-full bg-red-500 px-4 py-2 font-semibold text-white shadow-lg shadow-red-950/40 sm:inline-flex">Cart: 0</span>
             </nav>
         </header>
 

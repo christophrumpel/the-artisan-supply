@@ -1,12 +1,16 @@
 <?php
 
+use App\Models\Faq;
+use App\Models\ImageRequest;
 use App\Models\Product;
+use App\Models\ProductAsset;
+use App\Models\SupportMessage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('shop.index', [
         'featuredProducts' => Product::query()->where('featured', true)->get(),
-        'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
+        'products' => Product::query()->orderByDesc('featured')->orderBy('name')->limit(4)->get(),
     ]);
 })->name('home');
 
@@ -20,6 +24,15 @@ Route::get('/products/{product:slug}', function (Product $product) {
             ->get(),
     ]);
 })->name('products.show');
+
+Route::get('/studio', function () {
+    return view('shop.studio', [
+        'assets' => ProductAsset::with('product')->latest()->get(),
+        'imageRequests' => ImageRequest::with('product')->latest()->get(),
+        'supportMessages' => SupportMessage::latest()->get(),
+        'faqs' => Faq::latest()->get(),
+    ]);
+})->name('studio');
 
 Route::get('/support', function () {
     return view('shop.support', [

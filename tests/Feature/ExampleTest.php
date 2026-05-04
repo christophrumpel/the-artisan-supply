@@ -16,7 +16,7 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee('Laravel merch from an alternate timeline.');
+        $response->assertSee('Useful things for unserious Laravel developers.');
         $response->assertSee('Artisan Wand');
     }
 }

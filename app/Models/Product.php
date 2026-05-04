@@ -14,6 +14,7 @@ class Product extends Model
         'price_cents',
         'badge',
         'emoji',
+        'image_path',
         'color',
         'inventory',
         'featured',

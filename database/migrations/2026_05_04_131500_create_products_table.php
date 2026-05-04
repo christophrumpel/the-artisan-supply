@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('price_cents');
             $table->string('badge')->nullable();
             $table->string('emoji', 16);
+            $table->string('image_path')->nullable();
             $table->string('color');
             $table->unsignedInteger('inventory')->default(0);
             $table->boolean('featured')->default(false);
