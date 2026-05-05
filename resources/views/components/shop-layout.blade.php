@@ -29,6 +29,11 @@
                 <a href="{{ route('home') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Shop</a>
                 <a href="{{ route('studio') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Studio</a>
                 <a href="{{ route('support') }}" class="rounded-full px-4 py-2 hover:bg-white/10 hover:text-white">Support</a>
+                @auth
+                    <a href="{{ route('dashboard') }}" class="rounded-full bg-white px-4 py-2 font-semibold text-[#140b0a] shadow-sm hover:bg-red-100">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-full bg-white px-4 py-2 font-semibold text-[#140b0a] shadow-sm hover:bg-red-100">Login</a>
+                @endauth
             </nav>
         </header>
 
