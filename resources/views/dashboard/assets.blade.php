@@ -9,7 +9,7 @@
                         <div class="max-w-3xl">
                             <flux:badge color="red">Feature 1</flux:badge>
                             <flux:heading class="mt-3" size="xl">Assets Manager</flux:heading>
-                            <flux:text class="mt-2 text-base">Upload product visuals and maintain the metadata by hand for now. Later, this exact flow becomes the AI-assisted asset manager.</flux:text>
+                            <flux:text class="mt-2 text-base">Upload and organize product visuals or documents. Later, generated images can land here as new assets.</flux:text>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3 sm:flex">

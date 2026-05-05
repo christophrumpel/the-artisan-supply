@@ -138,6 +138,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'faqs' => Faq::latest()->get(),
         ]);
     })->name('dashboard.knowledge-base.index');
+
+    Route::post('dashboard/knowledge-base', function (Request $request) {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'text' => ['required', 'string', 'max:4000'],
+        ]);
+
+        Faq::create([
+            'question' => $validated['title'],
+            'answer' => $validated['text'],
+        ]);
+
+        return back()->with('status', 'Knowledge base entry added.');
+    })->name('dashboard.knowledge-base.store');
 });
 
 require __DIR__.'/settings.php';

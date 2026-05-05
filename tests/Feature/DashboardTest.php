@@ -106,8 +106,24 @@ test('authenticated users can visit the knowledge base page', function () {
     $response = $this->actingAs($user)->get(route('dashboard.knowledge-base.index'));
 
     $response->assertOk();
-    $response->assertSee('FAQ knowledge base');
+    $response->assertSee('Knowledge base');
+    $response->assertSee('New entry');
     $response->assertSee('Most orders ship within 2-3 business days');
+});
+
+test('shopkeepers can manually add a knowledge base entry', function () {
+    $user = dashboardShopkeeper();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.knowledge-base.store'), [
+            'title' => 'Artisan Wand manual',
+            'text' => 'The wand is decorative and should be cleaned with a dry cloth.',
+        ])
+        ->assertRedirect();
+
+    expect(Faq::first())
+        ->question->toBe('Artisan Wand manual')
+        ->answer->toBe('The wand is decorative and should be cleaned with a dry cloth.');
 });
 
 test('shopkeepers can upload an asset with manual metadata', function () {
