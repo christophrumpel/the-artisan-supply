@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Faq;
-use App\Models\ImageRequest;
 use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
@@ -35,7 +34,6 @@ test('guests are redirected to the login page', function () {
     $response->assertRedirect(route('login'));
 
     $this->get(route('dashboard.assets.index'))->assertRedirect(route('login'));
-    $this->get(route('dashboard.images.index'))->assertRedirect(route('login'));
     $this->get(route('dashboard.support-replies.index'))->assertRedirect(route('login'));
     $this->get(route('dashboard.knowledge-base.index'))->assertRedirect(route('login'));
 });
@@ -50,34 +48,29 @@ test('authenticated users can visit the dashboard overview', function () {
 
     $response->assertOk();
     $response->assertSee('The Artisan Supply dashboard');
-    $response->assertSee('Asset metadata');
-    $response->assertSee('Product images');
+    $response->assertSee('Assets Manager');
     $response->assertSee('Support replies');
     $response->assertSee('Knowledge base');
-    $response->assertDontSee('Analyze uploaded asset');
-    $response->assertDontSee('Draft reply from shop data');
+    $response->assertDontSee('Product images');
+    $response->assertDontSee('Generate placeholder image');
 });
 
-test('authenticated users can visit the asset metadata page', function () {
+test('authenticated users can visit the assets manager page', function () {
     $user = dashboardShopkeeper();
     dashboardProduct();
 
     $response = $this->actingAs($user)->get(route('dashboard.assets.index'));
 
     $response->assertOk();
-    $response->assertSee('Asset metadata');
-    $response->assertSee('Analyze uploaded asset');
+    $response->assertSee('Assets Manager');
+    $response->assertSee('Upload asset');
+    $response->assertSee('Image alt text');
 });
 
-test('authenticated users can visit the product images page', function () {
+test('the separate product images page is removed', function () {
     $user = dashboardShopkeeper();
-    dashboardProduct();
 
-    $response = $this->actingAs($user)->get(route('dashboard.images.index'));
-
-    $response->assertOk();
-    $response->assertSee('Product images');
-    $response->assertSee('Generate placeholder image');
+    $this->actingAs($user)->get('/dashboard/images')->assertNotFound();
 });
 
 test('authenticated users can visit the support replies page without the knowledge base list', function () {
@@ -88,11 +81,19 @@ test('authenticated users can visit the support replies page without the knowled
         'answer' => 'Most orders ship within 2-3 business days unless they enter the failed jobs table.',
     ]);
 
+    SupportMessage::create([
+        'customer_name' => 'Nuno from Localhost',
+        'customer_email' => 'nuno@example.com',
+        'subject' => 'My lunchbox has been processing forever',
+        'message' => 'Is this expected or did it get stuck in a queue?',
+    ]);
+
     $response = $this->actingAs($user)->get(route('dashboard.support-replies.index'));
 
     $response->assertOk();
     $response->assertSee('Support replies');
-    $response->assertSee('Draft reply from shop data');
+    $response->assertSee('Nuno from Localhost');
+    $response->assertSee('No draft yet');
     $response->assertDontSee('Most orders ship within 2-3 business days');
 });
 
@@ -111,7 +112,7 @@ test('authenticated users can visit the knowledge base page', function () {
     $response->assertSee('Most orders ship within 2-3 business days');
 });
 
-test('shopkeepers can analyze an uploaded asset with placeholder metadata', function () {
+test('shopkeepers can upload an asset with manual metadata', function () {
     $user = dashboardShopkeeper();
     $product = dashboardProduct();
 
@@ -119,6 +120,9 @@ test('shopkeepers can analyze an uploaded asset with placeholder metadata', func
         ->post(route('dashboard.assets.store'), [
             'product_id' => $product->id,
             'asset' => UploadedFile::fake()->image('hero-shot.png', 800, 600),
+            'title' => 'Lunchbox hero shot',
+            'description' => 'Primary campaign image for the lunchbox.',
+            'alt_text' => 'A Queue Worker Lunchbox on a developer desk.',
         ])
         ->assertRedirect();
 
@@ -126,28 +130,40 @@ test('shopkeepers can analyze an uploaded asset with placeholder metadata', func
 
     expect($asset)
         ->filename->toBe('hero-shot.png')
-        ->title->toBe('Hero Shot')
-        ->description->toContain('Queue Worker Lunchbox');
+        ->title->toBe('Lunchbox hero shot')
+        ->description->toBe('Primary campaign image for the lunchbox.')
+        ->alt_text->toBe('A Queue Worker Lunchbox on a developer desk.')
+        ->mime_type->toBe('image/png')
+        ->size->toBeGreaterThan(0);
 });
 
-test('shopkeepers can create a generated image placeholder', function () {
+test('shopkeepers can edit asset metadata', function () {
     $user = dashboardShopkeeper();
     $product = dashboardProduct();
+    $asset = ProductAsset::create([
+        'product_id' => $product->id,
+        'filename' => 'hero-shot.png',
+        'mime_type' => 'image/png',
+        'size' => 12345,
+        'title' => 'Old title',
+    ]);
 
     $this->actingAs($user)
-        ->post(route('dashboard.images.store'), [
+        ->patch(route('dashboard.assets.update', $asset), [
             'product_id' => $product->id,
-            'prompt' => 'A warm product photo on a developer desk.',
+            'title' => 'Updated hero shot',
+            'description' => 'Updated description.',
+            'alt_text' => 'Updated image alt text.',
         ])
         ->assertRedirect();
 
-    expect(ImageRequest::first())
-        ->prompt->toBe('A warm product photo on a developer desk.')
-        ->status->toBe('generated placeholder')
-        ->image_path->toBe('placeholder');
+    expect($asset->refresh())
+        ->title->toBe('Updated hero shot')
+        ->description->toBe('Updated description.')
+        ->alt_text->toBe('Updated image alt text.');
 });
 
-test('shopkeepers can draft a support reply from local shop data', function () {
+test('shopkeepers can draft a support reply directly on an incoming email once', function () {
     $user = dashboardShopkeeper();
     dashboardProduct();
 
@@ -156,16 +172,26 @@ test('shopkeepers can draft a support reply from local shop data', function () {
         'answer' => 'Most orders ship within 2-3 business days unless they enter the failed jobs table.',
     ]);
 
+    $message = SupportMessage::create([
+        'customer_name' => 'Nuno',
+        'customer_email' => 'nuno@example.com',
+        'subject' => 'Queue Worker Lunchbox shipping',
+        'message' => 'When will my lunchbox ship?',
+    ]);
+
     $this->actingAs($user)
-        ->post(route('dashboard.support-replies.store'), [
-            'customer_name' => 'Nuno',
-            'customer_email' => 'nuno@example.com',
-            'subject' => 'Queue Worker Lunchbox shipping',
-            'message' => 'When will my lunchbox ship?',
-        ])
+        ->post(route('dashboard.support-replies.draft', $message))
         ->assertRedirect();
 
-    expect(SupportMessage::first())
-        ->draft_reply->toContain('Most orders ship within 2-3 business days')
-        ->draft_reply->toContain('Queue Worker Lunchbox');
+    $firstDraft = $message->refresh()->draft_reply;
+
+    expect($firstDraft)
+        ->toContain('Most orders ship within 2-3 business days')
+        ->toContain('Queue Worker Lunchbox');
+
+    $this->actingAs($user)
+        ->post(route('dashboard.support-replies.draft', $message))
+        ->assertRedirect();
+
+    expect($message->refresh()->draft_reply)->toBe($firstDraft);
 });

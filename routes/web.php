@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Faq;
-use App\Models\ImageRequest;
 use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
@@ -52,8 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return view('dashboard', [
             'assetCount' => ProductAsset::count(),
-            'imageRequestCount' => ImageRequest::count(),
             'supportMessageCount' => SupportMessage::count(),
+            'draftedReplyCount' => SupportMessage::query()->whereNotNull('draft_reply')->count(),
             'faqCount' => Faq::count(),
         ]);
     })->name('dashboard');
@@ -69,49 +68,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
             'asset' => ['required', 'file', 'max:10240'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'alt_text' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $product = Product::findOrFail($validated['product_id']);
         $file = $request->file('asset');
-        $title = Str::of($file->getClientOriginalName())
+        $fallbackTitle = Str::of($file->getClientOriginalName())
             ->beforeLast('.')
             ->replace(['-', '_'], ' ')
             ->title();
 
         ProductAsset::create([
-            'product_id' => $product->id,
+            'product_id' => $validated['product_id'],
             'filename' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
-            'title' => $title,
-            'description' => "A {$file->getMimeType()} asset for {$product->name}. Placeholder metadata generated from the upload until the AI analyzer is wired in.",
+            'title' => $validated['title'] ?: $fallbackTitle,
+            'description' => $validated['description'],
+            'alt_text' => $validated['alt_text'],
         ]);
 
-        return back()->with('status', 'Asset metadata filled from the uploaded file.');
+        return back()->with('status', 'Asset uploaded. Metadata is ready to edit.');
     })->name('dashboard.assets.store');
 
-    Route::get('dashboard/images', function () {
-        return view('dashboard.images', [
-            'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
-            'imageRequests' => ImageRequest::with('product')->latest()->get(),
-        ]);
-    })->name('dashboard.images.index');
-
-    Route::post('dashboard/images', function (Request $request) {
+    Route::patch('dashboard/assets/{productAsset}', function (Request $request, ProductAsset $productAsset) {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
-            'prompt' => ['required', 'string', 'max:500'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'alt_text' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        ImageRequest::create([
-            'product_id' => $validated['product_id'],
-            'prompt' => $validated['prompt'],
-            'status' => 'generated placeholder',
-            'image_path' => 'placeholder',
-        ]);
+        $productAsset->update($validated);
 
-        return back()->with('status', 'Placeholder product image generated.');
-    })->name('dashboard.images.store');
+        return back()->with('status', 'Asset saved.');
+    })->name('dashboard.assets.update');
 
     Route::get('dashboard/support-replies', function () {
         return view('dashboard.support-replies', [
@@ -119,15 +111,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard.support-replies.index');
 
-    Route::post('dashboard/support-replies', function (Request $request) {
-        $validated = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_email' => ['required', 'email', 'max:255'],
-            'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:2000'],
-        ]);
+    Route::post('dashboard/support-replies/{supportMessage}/draft', function (SupportMessage $supportMessage) {
+        if ($supportMessage->draft_reply !== null) {
+            return back()->with('status', 'This email already has a draft reply.');
+        }
 
-        $messageText = Str::lower($validated['subject'].' '.$validated['message']);
+        $messageText = Str::lower($supportMessage->subject.' '.$supportMessage->message);
 
         $faq = Faq::query()
             ->get()
@@ -142,12 +131,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $answer = $faq?->answer ?? 'I could not find an exact FAQ match yet, so I would answer with our standard friendly support tone and ask one clarifying question.';
         $productLine = $product ? " I also found the related product: {$product->name}." : '';
 
-        SupportMessage::create($validated + [
-            'draft_reply' => "Hi {$validated['customer_name']}, thanks for reaching out! {$answer}{$productLine} If this does not solve it, reply here and we will take a closer look.",
+        $supportMessage->update([
+            'draft_reply' => "Hi {$supportMessage->customer_name}, thanks for reaching out! {$answer}{$productLine} If this does not solve it, reply here and we will take a closer look.",
         ]);
 
-        return back()->with('status', 'Support reply drafted from the local FAQ and product data.');
-    })->name('dashboard.support-replies.store');
+        return back()->with('status', "Draft reply added to {$supportMessage->customer_name}'s email.");
+    })->name('dashboard.support-replies.draft');
 
     Route::get('dashboard/knowledge-base', function () {
         return view('dashboard.knowledge-base', [

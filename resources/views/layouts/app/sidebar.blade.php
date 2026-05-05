@@ -16,10 +16,7 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="paper-clip" :href="route('dashboard.assets.index')" :current="request()->routeIs('dashboard.assets.*')" wire:navigate>
-                        {{ __('Asset metadata') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="photo" :href="route('dashboard.images.index')" :current="request()->routeIs('dashboard.images.*')" wire:navigate>
-                        {{ __('Product images') }}
+                        {{ __('Assets Manager') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('dashboard.support-replies.index')" :current="request()->routeIs('dashboard.support-replies.*')" wire:navigate>
                         {{ __('Support replies') }}

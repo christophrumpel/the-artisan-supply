@@ -14,6 +14,7 @@ class ProductAsset extends Model
         'size',
         'title',
         'description',
+        'alt_text',
     ];
 
     public function product(): BelongsTo
