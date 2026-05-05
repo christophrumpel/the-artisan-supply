@@ -130,6 +130,7 @@ test('shopkeepers can upload an asset with manual metadata', function () {
 
     expect($asset)
         ->filename->toBe('hero-shot.png')
+        ->file_path->toStartWith('uploads/assets/')
         ->title->toBe('Lunchbox hero shot')
         ->description->toBe('Primary campaign image for the lunchbox.')
         ->alt_text->toBe('A Queue Worker Lunchbox on a developer desk.')
@@ -143,6 +144,7 @@ test('shopkeepers can edit asset metadata', function () {
     $asset = ProductAsset::create([
         'product_id' => $product->id,
         'filename' => 'hero-shot.png',
+        'file_path' => 'uploads/assets/hero-shot.png',
         'mime_type' => 'image/png',
         'size' => 12345,
         'title' => 'Old title',

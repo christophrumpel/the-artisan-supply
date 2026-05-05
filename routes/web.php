@@ -74,16 +74,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
 
         $file = $request->file('asset');
-        $fallbackTitle = Str::of($file->getClientOriginalName())
+        $originalName = $file->getClientOriginalName();
+        $mimeType = $file->getMimeType();
+        $size = $file->getSize();
+        $filename = Str::uuid().'-'.$originalName;
+        $file->move(public_path('uploads/assets'), $filename);
+        $fallbackTitle = Str::of($originalName)
             ->beforeLast('.')
             ->replace(['-', '_'], ' ')
             ->title();
 
         ProductAsset::create([
             'product_id' => $validated['product_id'],
-            'filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
+            'filename' => $originalName,
+            'file_path' => 'uploads/assets/'.$filename,
+            'mime_type' => $mimeType,
+            'size' => $size,
             'title' => $validated['title'] ?: $fallbackTitle,
             'description' => $validated['description'],
             'alt_text' => $validated['alt_text'],

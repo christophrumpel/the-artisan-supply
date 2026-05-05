@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
         ProductAsset::create([
             'product_id' => $wand->id,
             'filename' => 'artisan-wand-hero.png',
+            'file_path' => 'images/products/artisan-wand.png',
             'mime_type' => 'image/png',
             'size' => 1824000,
             'title' => 'Artisan Wand hero image',

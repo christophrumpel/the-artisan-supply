@@ -10,6 +10,7 @@ class ProductAsset extends Model
     protected $fillable = [
         'product_id',
         'filename',
+        'file_path',
         'mime_type',
         'size',
         'title',
