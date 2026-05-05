@@ -4,46 +4,34 @@
             <div>
                 <flux:heading size="xl">The Artisan Supply dashboard</flux:heading>
                 <flux:text class="mt-2 max-w-3xl">
-                    A simple overview of the shop workflows. Open each area to test the current placeholder behavior before the AI integrations are wired in.
+                    A simple overview of the shop workflows: manage product assets, draft support replies, and review the knowledge base before the AI integrations are wired in.
                 </flux:text>
             </div>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <div class="grid gap-4 lg:grid-cols-3">
             <a href="{{ route('dashboard.assets.index') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-red-800">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <flux:badge color="red">Feature 1</flux:badge>
-                        <flux:heading class="mt-3" size="lg">Asset metadata</flux:heading>
-                        <flux:text class="mt-2">Upload assets and generate placeholder metadata from the file.</flux:text>
+                        <flux:heading class="mt-3" size="lg">Assets Manager</flux:heading>
+                        <flux:text class="mt-2">Upload assets, review file details, and manually maintain title, description, and image alt text.</flux:text>
                     </div>
                     <div class="rounded-xl bg-red-100 p-3 text-2xl dark:bg-red-950/50">📎</div>
                 </div>
                 <p class="mt-5 text-sm font-medium text-red-600 dark:text-red-400">{{ $assetCount }} uploaded assets →</p>
             </a>
 
-            <a href="{{ route('dashboard.images.index') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-purple-800">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <flux:badge color="purple">Feature 2</flux:badge>
-                        <flux:heading class="mt-3" size="lg">Product images</flux:heading>
-                        <flux:text class="mt-2">Write prompts and create generated-image placeholders.</flux:text>
-                    </div>
-                    <div class="rounded-xl bg-purple-100 p-3 text-2xl dark:bg-purple-950/50">🖼️</div>
-                </div>
-                <p class="mt-5 text-sm font-medium text-purple-600 dark:text-purple-400">{{ $imageRequestCount }} image requests →</p>
-            </a>
-
             <a href="{{ route('dashboard.support-replies.index') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-800">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <flux:badge color="blue">Feature 3</flux:badge>
+                        <flux:badge color="blue">Feature 2</flux:badge>
                         <flux:heading class="mt-3" size="lg">Support replies</flux:heading>
-                        <flux:text class="mt-2">Draft replies from local FAQ and product data.</flux:text>
+                        <flux:text class="mt-2">Review incoming customer emails and draft one reply directly under each message.</flux:text>
                     </div>
                     <div class="rounded-xl bg-blue-100 p-3 text-2xl dark:bg-blue-950/50">💬</div>
                 </div>
-                <p class="mt-5 text-sm font-medium text-blue-600 dark:text-blue-400">{{ $supportMessageCount }} drafted replies →</p>
+                <p class="mt-5 text-sm font-medium text-blue-600 dark:text-blue-400">{{ $draftedReplyCount }} / {{ $supportMessageCount }} replies drafted →</p>
             </a>
 
             <a href="{{ route('dashboard.knowledge-base.index') }}" wire:navigate class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-lime-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-lime-800">

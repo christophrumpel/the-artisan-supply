@@ -16,15 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('size')->default(0);
             $table->string('title')->nullable();
             $table->text('description')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('image_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->text('prompt');
-            $table->string('status')->default('draft');
-            $table->string('image_path')->nullable();
+            $table->text('alt_text')->nullable();
             $table->timestamps();
         });
 
