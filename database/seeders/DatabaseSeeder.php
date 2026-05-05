@@ -27,17 +27,26 @@ class DatabaseSeeder extends Seeder
 
         $this->call(ProductSeeder::class);
 
-        $wand = Product::where('slug', 'artisan-wand')->first();
-        ProductAsset::create([
-            'product_id' => $wand->id,
-            'filename' => 'artisan-wand-hero.png',
-            'file_path' => 'images/products/artisan-wand.png',
-            'mime_type' => 'image/png',
-            'size' => 1824000,
-            'title' => 'Artisan Wand hero image',
-            'description' => 'Primary product image for the decorative Artisan Wand product page.',
-            'alt_text' => 'A red Artisan Wand displayed like a premium developer collectible.',
-        ]);
+        Product::query()
+            ->whereNotNull('image_path')
+            ->get()
+            ->each(function (Product $product) {
+                $filename = basename($product->image_path);
+                $path = public_path($product->image_path);
+
+                ProductAsset::updateOrCreate(
+                    ['filename' => $filename],
+                    [
+                        'product_id' => $product->id,
+                        'file_path' => $product->image_path,
+                        'mime_type' => 'image/png',
+                        'size' => file_exists($path) ? filesize($path) : 0,
+                        'title' => $product->name.' product image',
+                        'description' => 'Seeded product image used on the '.$product->name.' product page.',
+                        'alt_text' => $product->name.' product image for The Artisan Supply shop.',
+                    ],
+                );
+            });
 
         collect([
             ['question' => 'Does the Artisan Wand run real commands?', 'answer' => 'No. It is decorative, but it pairs well with confident terminal usage.'],
