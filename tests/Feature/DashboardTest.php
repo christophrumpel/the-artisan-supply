@@ -33,9 +33,14 @@ function dashboardProduct(array $attributes = []): Product
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('login'));
+
+    $this->get(route('dashboard.assets.index'))->assertRedirect(route('login'));
+    $this->get(route('dashboard.images.index'))->assertRedirect(route('login'));
+    $this->get(route('dashboard.support-replies.index'))->assertRedirect(route('login'));
+    $this->get(route('dashboard.knowledge-base.index'))->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
+test('authenticated users can visit the dashboard overview', function () {
     $user = dashboardShopkeeper();
     dashboardProduct();
 
@@ -46,8 +51,64 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertOk();
     $response->assertSee('The Artisan Supply dashboard');
     $response->assertSee('Asset metadata');
-    $response->assertSee('Product image');
-    $response->assertSee('Support reply');
+    $response->assertSee('Product images');
+    $response->assertSee('Support replies');
+    $response->assertSee('Knowledge base');
+    $response->assertDontSee('Analyze uploaded asset');
+    $response->assertDontSee('Draft reply from shop data');
+});
+
+test('authenticated users can visit the asset metadata page', function () {
+    $user = dashboardShopkeeper();
+    dashboardProduct();
+
+    $response = $this->actingAs($user)->get(route('dashboard.assets.index'));
+
+    $response->assertOk();
+    $response->assertSee('Asset metadata');
+    $response->assertSee('Analyze uploaded asset');
+});
+
+test('authenticated users can visit the product images page', function () {
+    $user = dashboardShopkeeper();
+    dashboardProduct();
+
+    $response = $this->actingAs($user)->get(route('dashboard.images.index'));
+
+    $response->assertOk();
+    $response->assertSee('Product images');
+    $response->assertSee('Generate placeholder image');
+});
+
+test('authenticated users can visit the support replies page without the knowledge base list', function () {
+    $user = dashboardShopkeeper();
+
+    Faq::create([
+        'question' => 'When will my Queue Worker Lunchbox ship?',
+        'answer' => 'Most orders ship within 2-3 business days unless they enter the failed jobs table.',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('dashboard.support-replies.index'));
+
+    $response->assertOk();
+    $response->assertSee('Support replies');
+    $response->assertSee('Draft reply from shop data');
+    $response->assertDontSee('Most orders ship within 2-3 business days');
+});
+
+test('authenticated users can visit the knowledge base page', function () {
+    $user = dashboardShopkeeper();
+
+    Faq::create([
+        'question' => 'When will my Queue Worker Lunchbox ship?',
+        'answer' => 'Most orders ship within 2-3 business days unless they enter the failed jobs table.',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('dashboard.knowledge-base.index'));
+
+    $response->assertOk();
+    $response->assertSee('FAQ knowledge base');
+    $response->assertSee('Most orders ship within 2-3 business days');
 });
 
 test('shopkeepers can analyze an uploaded asset with placeholder metadata', function () {

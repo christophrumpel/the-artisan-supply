@@ -15,6 +15,18 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="paper-clip" :href="route('dashboard.assets.index')" :current="request()->routeIs('dashboard.assets.*')" wire:navigate>
+                        {{ __('Asset metadata') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="photo" :href="route('dashboard.images.index')" :current="request()->routeIs('dashboard.images.*')" wire:navigate>
+                        {{ __('Product images') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('dashboard.support-replies.index')" :current="request()->routeIs('dashboard.support-replies.*')" wire:navigate>
+                        {{ __('Support replies') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open-text" :href="route('dashboard.knowledge-base.index')" :current="request()->routeIs('dashboard.knowledge-base.*')" wire:navigate>
+                        {{ __('Knowledge base') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="shopping-bag" :href="route('home')">
                         {{ __('Shop') }}
                     </flux:sidebar.item>

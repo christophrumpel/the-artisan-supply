@@ -51,13 +51,19 @@ Route::get('/support', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return view('dashboard', [
-            'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
-            'assets' => ProductAsset::with('product')->latest()->get(),
-            'imageRequests' => ImageRequest::with('product')->latest()->get(),
-            'supportMessages' => SupportMessage::latest()->get(),
-            'faqs' => Faq::latest()->get(),
+            'assetCount' => ProductAsset::count(),
+            'imageRequestCount' => ImageRequest::count(),
+            'supportMessageCount' => SupportMessage::count(),
+            'faqCount' => Faq::count(),
         ]);
     })->name('dashboard');
+
+    Route::get('dashboard/assets', function () {
+        return view('dashboard.assets', [
+            'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
+            'assets' => ProductAsset::with('product')->latest()->get(),
+        ]);
+    })->name('dashboard.assets.index');
 
     Route::post('dashboard/assets', function (Request $request) {
         $validated = $request->validate([
@@ -84,6 +90,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return back()->with('status', 'Asset metadata filled from the uploaded file.');
     })->name('dashboard.assets.store');
 
+    Route::get('dashboard/images', function () {
+        return view('dashboard.images', [
+            'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
+            'imageRequests' => ImageRequest::with('product')->latest()->get(),
+        ]);
+    })->name('dashboard.images.index');
+
     Route::post('dashboard/images', function (Request $request) {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -99,6 +112,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return back()->with('status', 'Placeholder product image generated.');
     })->name('dashboard.images.store');
+
+    Route::get('dashboard/support-replies', function () {
+        return view('dashboard.support-replies', [
+            'supportMessages' => SupportMessage::latest()->get(),
+        ]);
+    })->name('dashboard.support-replies.index');
 
     Route::post('dashboard/support-replies', function (Request $request) {
         $validated = $request->validate([
@@ -129,6 +148,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return back()->with('status', 'Support reply drafted from the local FAQ and product data.');
     })->name('dashboard.support-replies.store');
+
+    Route::get('dashboard/knowledge-base', function () {
+        return view('dashboard.knowledge-base', [
+            'faqs' => Faq::latest()->get(),
+        ]);
+    })->name('dashboard.knowledge-base.index');
 });
 
 require __DIR__.'/settings.php';
