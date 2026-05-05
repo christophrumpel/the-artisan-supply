@@ -48,9 +48,7 @@ test('authenticated users can visit the dashboard overview', function () {
 
     $response->assertOk();
     $response->assertSee('The Artisan Supply dashboard');
-    $response->assertSee('Assets Manager');
-    $response->assertSee('Support replies');
-    $response->assertSee('Knowledge base');
+    $response->assertSee('The Artisan Supply dashboard');
     $response->assertDontSee('Product images');
     $response->assertDontSee('Generate placeholder image');
 });

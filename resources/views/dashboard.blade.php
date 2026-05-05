@@ -13,62 +13,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="grid gap-5 lg:grid-cols-3">
-                <a href="{{ route('dashboard.assets.index') }}" wire:navigate class="group overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-                    <div class="h-2 bg-gradient-to-r from-red-500 to-orange-300"></div>
-                    <div class="p-5">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <flux:badge color="red">Feature 1</flux:badge>
-                                <flux:heading class="mt-3" size="lg">Assets Manager</flux:heading>
-                            </div>
-                            <div class="rounded-2xl bg-red-50 p-3 text-2xl transition group-hover:scale-110 dark:bg-red-950/40">📎</div>
-                        </div>
-                        <flux:text class="mt-4">Upload assets, review file details, and manually maintain title, description, and image alt text.</flux:text>
-                        <div class="mt-6 flex items-end justify-between">
-                            <p class="text-3xl font-black text-zinc-950 dark:text-white">{{ $assetCount }}</p>
-                            <p class="text-sm font-bold text-red-600 dark:text-red-400">Open manager →</p>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="{{ route('dashboard.support-replies.index') }}" wire:navigate class="group overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-                    <div class="h-2 bg-gradient-to-r from-blue-600 to-sky-300"></div>
-                    <div class="p-5">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <flux:badge color="blue">Feature 2</flux:badge>
-                                <flux:heading class="mt-3" size="lg">Support replies</flux:heading>
-                            </div>
-                            <div class="rounded-2xl bg-blue-50 p-3 text-2xl transition group-hover:scale-110 dark:bg-blue-950/40">💬</div>
-                        </div>
-                        <flux:text class="mt-4">Review incoming customer emails and draft one reply directly under each message.</flux:text>
-                        <div class="mt-6 flex items-end justify-between">
-                            <p class="text-3xl font-black text-zinc-950 dark:text-white">{{ $draftedReplyCount }} / {{ $supportMessageCount }}</p>
-                            <p class="text-sm font-bold text-blue-600 dark:text-blue-400">Open inbox →</p>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="{{ route('dashboard.knowledge-base.index') }}" wire:navigate class="group overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-                    <div class="h-2 bg-gradient-to-r from-lime-500 to-emerald-300"></div>
-                    <div class="p-5">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <flux:badge color="lime">Data source</flux:badge>
-                                <flux:heading class="mt-3" size="lg">Knowledge base</flux:heading>
-                            </div>
-                            <div class="rounded-2xl bg-lime-50 p-3 text-2xl transition group-hover:scale-110 dark:bg-lime-950/40">📚</div>
-                        </div>
-                        <flux:text class="mt-4">Review the FAQ entries used by the support reply drafter.</flux:text>
-                        <div class="mt-6 flex items-end justify-between">
-                            <p class="text-3xl font-black text-zinc-950 dark:text-white">{{ $faqCount }}</p>
-                            <p class="text-sm font-bold text-lime-700 dark:text-lime-400">Open data →</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
         </div>
     </div>
 </x-layouts::app>
