@@ -111,28 +111,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard.support-replies.index');
 
-    Route::post('dashboard/support-replies/{supportMessage}/draft', function (SupportMessage $supportMessage) {
+    Route::post('dashboard/support-replies/{supportMessage}/draft', function (Request $request, SupportMessage $supportMessage) {
         if ($supportMessage->draft_reply !== null) {
             return back()->with('status', 'This email already has a draft reply.');
         }
 
-        $messageText = Str::lower($supportMessage->subject.' '.$supportMessage->message);
-
-        $faq = Faq::query()
-            ->get()
-            ->first(fn (Faq $faq) => Str::of($messageText)->contains(
-                Str::of($faq->question)->lower()->explode(' ')->filter(fn (string $word) => strlen($word) > 4)->all()
-            ));
-
-        $product = Product::query()
-            ->get()
-            ->first(fn (Product $product) => Str::of($messageText)->contains(Str::lower($product->name)));
-
-        $answer = $faq?->answer ?? 'I could not find an exact FAQ match yet, so I would answer with our standard friendly support tone and ask one clarifying question.';
-        $productLine = $product ? " I also found the related product: {$product->name}." : '';
+        $validated = $request->validate([
+            'draft_reply' => ['required', 'string', 'max:3000'],
+        ]);
 
         $supportMessage->update([
-            'draft_reply' => "Hi {$supportMessage->customer_name}, thanks for reaching out! {$answer}{$productLine} If this does not solve it, reply here and we will take a closer look.",
+            'draft_reply' => $validated['draft_reply'],
         ]);
 
         return back()->with('status', "Draft reply added to {$supportMessage->customer_name}'s email.");

@@ -93,7 +93,7 @@ test('authenticated users can visit the support replies page without the knowled
     $response->assertOk();
     $response->assertSee('Support replies');
     $response->assertSee('Nuno from Localhost');
-    $response->assertSee('No draft yet');
+    $response->assertSee('Draft reply');
     $response->assertDontSee('Most orders ship within 2-3 business days');
 });
 
@@ -167,11 +167,6 @@ test('shopkeepers can draft a support reply directly on an incoming email once',
     $user = dashboardShopkeeper();
     dashboardProduct();
 
-    Faq::create([
-        'question' => 'When will my Queue Worker Lunchbox ship?',
-        'answer' => 'Most orders ship within 2-3 business days unless they enter the failed jobs table.',
-    ]);
-
     $message = SupportMessage::create([
         'customer_name' => 'Nuno',
         'customer_email' => 'nuno@example.com',
@@ -180,17 +175,19 @@ test('shopkeepers can draft a support reply directly on an incoming email once',
     ]);
 
     $this->actingAs($user)
-        ->post(route('dashboard.support-replies.draft', $message))
+        ->post(route('dashboard.support-replies.draft', $message), [
+            'draft_reply' => 'Hi Nuno, your lunchbox ships within 2-3 business days.',
+        ])
         ->assertRedirect();
 
     $firstDraft = $message->refresh()->draft_reply;
 
-    expect($firstDraft)
-        ->toContain('Most orders ship within 2-3 business days')
-        ->toContain('Queue Worker Lunchbox');
+    expect($firstDraft)->toBe('Hi Nuno, your lunchbox ships within 2-3 business days.');
 
     $this->actingAs($user)
-        ->post(route('dashboard.support-replies.draft', $message))
+        ->post(route('dashboard.support-replies.draft', $message), [
+            'draft_reply' => 'This second draft should not replace the original.',
+        ])
         ->assertRedirect();
 
     expect($message->refresh()->draft_reply)->toBe($firstDraft);
