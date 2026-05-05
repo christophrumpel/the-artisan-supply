@@ -76,50 +76,51 @@
                     </div>
                 </form>
 
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    @forelse ($assets as $asset)
-                        <article class="overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
-                            <div class="border-b border-zinc-100 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/70">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-2xl text-white shadow-sm dark:bg-white dark:text-zinc-950">
+                <div class="overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                        <p class="text-sm font-bold text-zinc-950 dark:text-white">Uploaded assets</p>
+                        <p class="mt-1 text-sm text-zinc-500">Clean summary of the files and metadata captured so far.</p>
+                    </div>
+
+                    <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        @forelse ($assets as $asset)
+                            <article class="grid gap-4 px-5 py-4 transition hover:bg-zinc-50 dark:hover:bg-zinc-800/40 lg:grid-cols-[minmax(0,1fr)_12rem_10rem] lg:items-start">
+                                <div class="flex min-w-0 gap-3">
+                                    <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-lg dark:bg-zinc-800">
                                         {{ str($asset->mime_type)->contains('image') ? '🖼️' : '📄' }}
                                     </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate font-bold text-zinc-950 dark:text-white">{{ $asset->title ?: $asset->filename }}</p>
-                                        <p class="mt-1 truncate text-xs font-medium text-zinc-500">{{ $asset->filename }}</p>
+                                    <div class="min-w-0">
+                                        <p class="truncate font-semibold text-zinc-950 dark:text-white">{{ $asset->title ?: $asset->filename }}</p>
+                                        <p class="mt-1 truncate text-sm text-zinc-500">{{ $asset->filename }}</p>
+
+                                        @if ($asset->description)
+                                            <p class="mt-2 line-clamp-2 text-sm leading-6 text-zinc-650 dark:text-zinc-300">{{ $asset->description }}</p>
+                                        @endif
+
+                                        @if (str($asset->mime_type)->contains('image') && $asset->alt_text)
+                                            <p class="mt-2 text-sm leading-6 text-zinc-500"><span class="font-semibold text-zinc-700 dark:text-zinc-200">Alt:</span> {{ $asset->alt_text }}</p>
+                                        @endif
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="space-y-4 p-5">
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $asset->product?->name }}</span>
-                                    <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $asset->mime_type ?? 'Unknown type' }}</span>
-                                    <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ number_format($asset->size / 1000000, 1) }} MB</span>
+                                <div class="text-sm text-zinc-600 dark:text-zinc-300">
+                                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-zinc-400">Product</p>
+                                    <p class="mt-1 font-medium">{{ $asset->product?->name }}</p>
                                 </div>
 
-                                @if ($asset->description)
-                                    <div>
-                                        <p class="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">Description</p>
-                                        <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{{ $asset->description }}</p>
-                                    </div>
-                                @endif
-
-                                @if (str($asset->mime_type)->contains('image') && $asset->alt_text)
-                                    <div class="rounded-2xl border border-red-100 bg-red-50/60 p-4 dark:border-red-950 dark:bg-red-950/20">
-                                        <p class="text-xs font-bold uppercase tracking-[0.16em] text-red-600 dark:text-red-300">Image alt text</p>
-                                        <p class="mt-2 text-sm leading-6 text-red-950 dark:text-red-100">{{ $asset->alt_text }}</p>
-                                    </div>
-                                @endif
+                                <div class="flex flex-wrap gap-2 lg:justify-end">
+                                    <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $asset->mime_type ?? 'Unknown' }}</span>
+                                    <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ number_format($asset->size / 1000000, 1) }} MB</span>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="px-5 py-10 text-center text-zinc-500">
+                                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-xl dark:bg-red-950/30">📎</div>
+                                <p class="mt-4 font-semibold text-zinc-900 dark:text-zinc-100">No uploaded assets yet.</p>
+                                <p class="mt-1 text-sm">Upload the first file to start building the demo library.</p>
                             </div>
-                        </article>
-                    @empty
-                        <div class="rounded-[1.75rem] border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 md:col-span-2 xl:col-span-3">
-                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-2xl dark:bg-red-950/30">📎</div>
-                            <p class="mt-4 font-semibold text-zinc-900 dark:text-zinc-100">No uploaded assets yet.</p>
-                            <p class="mt-1 text-sm">Upload the first file to start building the demo library.</p>
-                        </div>
-                    @endforelse
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>

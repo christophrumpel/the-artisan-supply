@@ -52,7 +52,7 @@
                                     </div>
                                 @else
                                     <details class="group mt-4">
-                                        <summary class="inline-flex cursor-pointer list-none items-center rounded-xl bg-blue-600 px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">
+                                        <summary class="inline-flex cursor-pointer list-none items-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-blue-800 dark:hover:text-blue-300">
                                             Draft reply
                                         </summary>
                                         <form class="mt-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900" method="POST" action="{{ route('dashboard.support-replies.draft', $message) }}">
