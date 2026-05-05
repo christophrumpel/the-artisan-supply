@@ -41,12 +41,19 @@
                     </div>
 
                     <div class="space-y-4 p-5">
-                        <label class="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 bg-red-50/60 px-5 py-8 text-center transition hover:border-red-300 hover:bg-red-50 dark:border-red-950 dark:bg-red-950/20" for="asset">
-                            <div class="rounded-2xl bg-white p-3 text-2xl shadow-sm dark:bg-zinc-900">📎</div>
-                            <p class="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Upload asset</p>
-                            <p class="mt-1 text-xs text-zinc-500">Type and size are captured automatically</p>
-                            <input id="asset" name="asset" type="file" class="sr-only">
-                        </label>
+                        <div x-data="{ fileName: null }">
+                            <label class="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 bg-red-50/60 px-5 py-8 text-center transition hover:border-red-300 hover:bg-red-50 dark:border-red-950 dark:bg-red-950/20" for="asset">
+                                <div class="rounded-2xl bg-white p-3 text-2xl shadow-sm dark:bg-zinc-900">📎</div>
+                                <p class="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Upload asset</p>
+                                <p class="mt-1 text-xs text-zinc-500">Type and size are captured automatically</p>
+                                <input id="asset" name="asset" type="file" class="sr-only" x-on:change="fileName = $event.target.files[0]?.name ?? null">
+                            </label>
+
+                            <div x-show="fileName" x-cloak class="mt-3 rounded-xl border border-red-100 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm dark:border-red-950 dark:bg-zinc-900 dark:text-zinc-200">
+                                <span class="text-zinc-400">Selected:</span>
+                                <span x-text="fileName"></span>
+                            </div>
+                        </div>
 
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500" for="asset_product_id">Product</label>
