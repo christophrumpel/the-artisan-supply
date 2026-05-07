@@ -56,6 +56,7 @@ Route::post('/support/voice-messages', function (Request $request) {
     ]);
 
     $audio = $request->file('audio');
+    $mimeType = $audio->getMimeType();
     $extension = $audio->guessExtension() ?: 'webm';
     $filename = Str::uuid().'.'.$extension;
     $path = 'uploads/support-audio/'.$filename;
@@ -69,7 +70,7 @@ Route::post('/support/voice-messages', function (Request $request) {
         'subject' => 'Voice support message',
         'message' => 'Voice message submitted from the support page.',
         'audio_path' => $path,
-        'audio_mime_type' => $audio->getMimeType(),
+        'audio_mime_type' => $mimeType,
         'audio_size' => filesize(public_path($path)),
     ]);
 
