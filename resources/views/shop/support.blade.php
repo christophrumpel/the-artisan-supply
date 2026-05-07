@@ -36,16 +36,6 @@
                     </label>
                 </div>
 
-                <label class="block">
-                    <span class="text-sm font-bold text-red-100">Subject</span>
-                    <input name="subject" type="text" class="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-stone-500 focus:border-red-300 focus:outline-none" placeholder="My Queue Worker Lunchbox is stuck">
-                </label>
-
-                <label class="block">
-                    <span class="text-sm font-bold text-red-100">Short note</span>
-                    <textarea name="message" rows="3" class="mt-2 w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-stone-500 focus:border-red-300 focus:outline-none" placeholder="Optional context before we listen to the audio"></textarea>
-                </label>
-
                 <div class="rounded-3xl border border-white/10 bg-[#1d100f]/80 p-5">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -70,104 +60,142 @@
     </section>
 
     <script>
-        const form = document.getElementById('voice-support-form');
-        const recordButton = document.getElementById('record-button');
-        const stopButton = document.getElementById('stop-button');
-        const submitButton = document.getElementById('submit-button');
-        const status = document.getElementById('recorder-status');
-        const feedback = document.getElementById('voice-support-feedback');
-        const audioPreview = document.getElementById('audio-preview');
+        (() => {
+            const form = document.getElementById('voice-support-form');
+            const recordButton = document.getElementById('record-button');
+            const stopButton = document.getElementById('stop-button');
+            const submitButton = document.getElementById('submit-button');
+            const recorderStatus = document.getElementById('recorder-status');
+            const feedback = document.getElementById('voice-support-feedback');
+            const audioPreview = document.getElementById('audio-preview');
 
-        let recorder;
-        let chunks = [];
-        let audioBlob;
-
-        if (! navigator.mediaDevices || ! window.MediaRecorder) {
-            status.textContent = 'Audio recording is not supported in this browser.';
-            recordButton.disabled = true;
-        }
-
-        recordButton?.addEventListener('click', async () => {
-            feedback.textContent = '';
-            chunks = [];
-            audioBlob = null;
-            submitButton.disabled = true;
-            audioPreview.classList.add('hidden');
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
-
-                recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-
-                recorder.addEventListener('dataavailable', (event) => {
-                    if (event.data.size > 0) {
-                        chunks.push(event.data);
-                    }
-                });
-
-                recorder.addEventListener('stop', () => {
-                    audioBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                    audioPreview.src = URL.createObjectURL(audioBlob);
-                    audioPreview.classList.remove('hidden');
-                    submitButton.disabled = false;
-                    status.textContent = 'Recording ready';
-                    stream.getTracks().forEach((track) => track.stop());
-                });
-
-                recorder.start();
-                status.textContent = 'Recording...';
-                recordButton.disabled = true;
-                stopButton.disabled = false;
-            } catch (error) {
-                status.textContent = 'Could not access the microphone.';
-                recordButton.disabled = false;
-            }
-        });
-
-        stopButton?.addEventListener('click', () => {
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.stop();
-            }
-
-            recordButton.disabled = false;
-            stopButton.disabled = true;
-        });
-
-        form?.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            if (! audioBlob) {
-                feedback.textContent = 'Please record a message first.';
+            if (! form || ! recordButton || ! stopButton || ! submitButton || ! recorderStatus || ! feedback || ! audioPreview) {
                 return;
             }
 
-            const data = new FormData(form);
-            data.append('audio', audioBlob, 'support-message.webm');
+            let recorder;
+            let stream;
+            let chunks = [];
+            let audioBlob;
 
-            submitButton.disabled = true;
-            feedback.textContent = 'Sending voice message...';
+            const setFeedback = (message) => {
+                feedback.textContent = message;
+            };
 
-            const response = await fetch(form.dataset.endpoint, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                },
-                body: data,
+            const resetRecording = () => {
+                chunks = [];
+                audioBlob = null;
+                submitButton.disabled = true;
+                audioPreview.removeAttribute('src');
+                audioPreview.classList.add('hidden');
+            };
+
+            const stopStream = () => {
+                stream?.getTracks().forEach((track) => track.stop());
+                stream = null;
+            };
+
+            if (! window.isSecureContext) {
+                recorderStatus.textContent = 'Audio recording needs HTTPS or localhost.';
+                recordButton.disabled = true;
+                return;
+            }
+
+            if (! navigator.mediaDevices?.getUserMedia || ! window.MediaRecorder) {
+                recorderStatus.textContent = 'Audio recording is not supported in this browser.';
+                recordButton.disabled = true;
+                return;
+            }
+
+            recordButton.addEventListener('click', async () => {
+                setFeedback('');
+                resetRecording();
+                recorderStatus.textContent = 'Asking for microphone access...';
+                recordButton.disabled = true;
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                        ? { mimeType: 'audio/webm;codecs=opus' }
+                        : undefined;
+
+                    recorder = new MediaRecorder(stream, options);
+
+                    recorder.addEventListener('dataavailable', (event) => {
+                        if (event.data.size > 0) {
+                            chunks.push(event.data);
+                        }
+                    });
+
+                    recorder.addEventListener('stop', () => {
+                        audioBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                        audioPreview.src = URL.createObjectURL(audioBlob);
+                        audioPreview.classList.remove('hidden');
+                        submitButton.disabled = false;
+                        stopButton.disabled = true;
+                        recordButton.disabled = false;
+                        recorderStatus.textContent = 'Recording ready';
+                        stopStream();
+                    });
+
+                    recorder.start();
+                    recorderStatus.textContent = 'Recording...';
+                    stopButton.disabled = false;
+                } catch (error) {
+                    recorderStatus.textContent = 'Could not access the microphone.';
+                    setFeedback(error?.message || 'Please allow microphone access and try again.');
+                    recordButton.disabled = false;
+                    stopButton.disabled = true;
+                    stopStream();
+                }
             });
 
-            if (response.ok) {
-                const json = await response.json();
-                form.reset();
-                audioBlob = null;
-                audioPreview.classList.add('hidden');
-                status.textContent = 'Ready to record';
-                feedback.textContent = json.message;
-                return;
-            }
+            stopButton.addEventListener('click', () => {
+                if (recorder && recorder.state !== 'inactive') {
+                    recorder.stop();
+                }
+            });
 
-            feedback.textContent = 'Something went wrong. Please try again.';
-            submitButton.disabled = false;
-        });
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                if (! audioBlob) {
+                    setFeedback('Please record a message first.');
+                    return;
+                }
+
+                const data = new FormData(form);
+                data.append('audio', audioBlob, 'support-message.webm');
+
+                submitButton.disabled = true;
+                setFeedback('Sending voice message...');
+
+                try {
+                    const response = await fetch(form.dataset.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        body: data,
+                    });
+
+                    if (response.ok) {
+                        const json = await response.json();
+                        form.reset();
+                        resetRecording();
+                        recorderStatus.textContent = 'Ready to record';
+                        setFeedback(json.message);
+                        return;
+                    }
+
+                    const json = await response.json().catch(() => null);
+                    setFeedback(json?.message || 'Something went wrong. Please try again.');
+                    submitButton.disabled = false;
+                } catch (error) {
+                    setFeedback('Could not send the message. Please try again.');
+                    submitButton.disabled = false;
+                }
+            });
+        })();
     </script>
 </x-shop-layout>

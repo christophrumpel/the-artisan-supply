@@ -52,8 +52,6 @@ Route::post('/support/voice-messages', function (Request $request) {
     $validated = $request->validate([
         'customer_name' => ['required', 'string', 'max:120'],
         'customer_email' => ['required', 'email', 'max:255'],
-        'subject' => ['nullable', 'string', 'max:255'],
-        'message' => ['nullable', 'string', 'max:2000'],
         'audio' => ['required', 'file', 'max:15360', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/wav,video/webm'],
     ]);
 
@@ -68,8 +66,8 @@ Route::post('/support/voice-messages', function (Request $request) {
     SupportMessage::create([
         'customer_name' => $validated['customer_name'],
         'customer_email' => $validated['customer_email'],
-        'subject' => $validated['subject'] ?: 'Voice support message',
-        'message' => $validated['message'] ?: 'Voice message submitted from the support page.',
+        'subject' => 'Voice support message',
+        'message' => 'Voice message submitted from the support page.',
         'audio_path' => $path,
         'audio_mime_type' => $audio->getMimeType(),
         'audio_size' => filesize(public_path($path)),

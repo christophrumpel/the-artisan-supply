@@ -215,8 +215,6 @@ test('customers can submit a voice support message', function () {
     $response = $this->postJson(route('support.voice-messages.store'), [
         'customer_name' => 'Mina from Production',
         'customer_email' => 'mina@example.com',
-        'subject' => 'Lunchbox question',
-        'message' => 'I recorded the details in the voice note.',
         'audio' => UploadedFile::fake()->createWithContent('question.webm', 'fake audio bytes'),
     ]);
 
@@ -229,8 +227,8 @@ test('customers can submit a voice support message', function () {
     expect($message)
         ->customer_name->toBe('Mina from Production')
         ->customer_email->toBe('mina@example.com')
-        ->subject->toBe('Lunchbox question')
-        ->message->toBe('I recorded the details in the voice note.')
+        ->subject->toBe('Voice support message')
+        ->message->toBe('Voice message submitted from the support page.')
         ->audio_path->toStartWith('uploads/support-audio/')
         ->audio_mime_type->toBeIn(['audio/webm', 'video/webm'])
         ->audio_size->toBeGreaterThan(0);
