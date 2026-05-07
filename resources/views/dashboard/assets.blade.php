@@ -143,6 +143,13 @@
                                             <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{{ $asset->alt_text }}</p>
                                         </div>
                                     @endif
+
+                                    @if ($asset->prompt)
+                                        <div>
+                                            <p class="text-xs font-bold uppercase tracking-[0.16em] text-zinc-400">Prompt</p>
+                                            <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{{ $asset->prompt }}</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </details>
                         @empty
