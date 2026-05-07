@@ -208,3 +208,53 @@ test('shopkeepers can draft a support reply directly on an incoming email once',
 
     expect($message->refresh()->draft_reply)->toBe($firstDraft);
 });
+
+test('customers can submit a voice support message', function () {
+    File::deleteDirectory(public_path('uploads/support-audio'));
+
+    $response = $this->postJson(route('support.voice-messages.store'), [
+        'customer_name' => 'Mina from Production',
+        'customer_email' => 'mina@example.com',
+        'subject' => 'Lunchbox question',
+        'message' => 'I recorded the details in the voice note.',
+        'audio' => UploadedFile::fake()->createWithContent('question.webm', 'fake audio bytes'),
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('message', 'Voice message received. Our support wizards are listening.');
+
+    $message = SupportMessage::first();
+
+    expect($message)
+        ->customer_name->toBe('Mina from Production')
+        ->customer_email->toBe('mina@example.com')
+        ->subject->toBe('Lunchbox question')
+        ->message->toBe('I recorded the details in the voice note.')
+        ->audio_path->toStartWith('uploads/support-audio/')
+        ->audio_mime_type->toBeIn(['audio/webm', 'video/webm'])
+        ->audio_size->toBeGreaterThan(0);
+
+    $this->assertFileExists(public_path($message->audio_path));
+});
+
+test('shopkeepers can play voice support messages in the dashboard', function () {
+    $user = dashboardShopkeeper();
+
+    SupportMessage::create([
+        'customer_name' => 'Mina from Production',
+        'customer_email' => 'mina@example.com',
+        'subject' => 'Lunchbox question',
+        'message' => 'Voice message submitted from the support page.',
+        'audio_path' => 'uploads/support-audio/demo.webm',
+        'audio_mime_type' => 'audio/webm',
+        'audio_size' => 2048,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('dashboard.support-replies.index'));
+
+    $response->assertOk();
+    $response->assertSee('Recorded audio');
+    $response->assertSee('uploads/support-audio/demo.webm');
+    $response->assertSee('2.0 KB');
+});

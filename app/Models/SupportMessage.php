@@ -11,6 +11,9 @@ class SupportMessage extends Model
         'customer_email',
         'subject',
         'message',
+        'audio_path',
+        'audio_mime_type',
+        'audio_size',
         'draft_reply',
     ];
 }

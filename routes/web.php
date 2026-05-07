@@ -5,6 +5,7 @@ use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -46,6 +47,38 @@ Route::get('/support', function () {
         ],
     ]);
 })->name('support');
+
+Route::post('/support/voice-messages', function (Request $request) {
+    $validated = $request->validate([
+        'customer_name' => ['required', 'string', 'max:120'],
+        'customer_email' => ['required', 'email', 'max:255'],
+        'subject' => ['nullable', 'string', 'max:255'],
+        'message' => ['nullable', 'string', 'max:2000'],
+        'audio' => ['required', 'file', 'max:15360', 'mimetypes:audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/wav,video/webm'],
+    ]);
+
+    $audio = $request->file('audio');
+    $extension = $audio->guessExtension() ?: 'webm';
+    $filename = Str::uuid().'.'.$extension;
+    $path = 'uploads/support-audio/'.$filename;
+
+    File::ensureDirectoryExists(public_path('uploads/support-audio'));
+    $audio->move(public_path('uploads/support-audio'), $filename);
+
+    SupportMessage::create([
+        'customer_name' => $validated['customer_name'],
+        'customer_email' => $validated['customer_email'],
+        'subject' => $validated['subject'] ?: 'Voice support message',
+        'message' => $validated['message'] ?: 'Voice message submitted from the support page.',
+        'audio_path' => $path,
+        'audio_mime_type' => $audio->getMimeType(),
+        'audio_size' => filesize(public_path($path)),
+    ]);
+
+    return response()->json([
+        'message' => 'Voice message received. Our support wizards are listening.',
+    ]);
+})->name('support.voice-messages.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

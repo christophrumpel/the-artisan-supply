@@ -8,7 +8,7 @@
                         <div class="max-w-3xl">
                             <flux:badge color="blue">Feature 2</flux:badge>
                             <flux:heading class="mt-3" size="xl">Support replies</flux:heading>
-                            <flux:text class="mt-2 text-base">Read customer emails and add a draft directly beneath each message. The current form is manual; the AI SDK will fill this later.</flux:text>
+                            <flux:text class="mt-2 text-base">Read incoming support messages, play voice notes, and add a draft directly beneath each message. Transcription and AI reply drafting come later.</flux:text>
                         </div>
 
                         <div class="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-800/70">
@@ -36,6 +36,9 @@
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-zinc-500">{{ $message->customer_name }} · {{ $message->customer_email }}</p>
+                                        @if ($message->audio_path)
+                                            <p class="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Voice message</p>
+                                        @endif
                                         <h2 class="mt-1 text-xl font-black tracking-tight text-zinc-950 dark:text-white">{{ $message->subject }}</h2>
                                     </div>
                                     <flux:badge :color="$message->draft_reply ? 'lime' : 'amber'">{{ $message->draft_reply ? 'Drafted' : 'Needs reply' }}</flux:badge>
@@ -44,6 +47,24 @@
                                 <div class="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200">
                                     {{ $message->message }}
                                 </div>
+
+                                @if ($message->audio_path)
+                                    <div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/70 dark:bg-blue-950/30">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300">Recorded audio</p>
+                                                <p class="mt-1 text-sm text-blue-950/70 dark:text-blue-100/75">
+                                                    {{ $message->audio_mime_type ?? 'audio file' }}
+                                                    @if ($message->audio_size)
+                                                        · {{ number_format($message->audio_size / 1024, 1) }} KB
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <a class="text-sm font-semibold text-blue-700 underline decoration-blue-300 underline-offset-4 dark:text-blue-300" href="{{ asset($message->audio_path) }}" target="_blank">Open file</a>
+                                        </div>
+                                        <audio controls class="mt-4 w-full" src="{{ asset($message->audio_path) }}"></audio>
+                                    </div>
+                                @endif
 
                                 @if ($message->draft_reply)
                                     <div class="mt-4 border-l-4 border-blue-500 pl-4">
@@ -71,7 +92,7 @@
                 @empty
                     <div class="rounded-[1.75rem] border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl dark:bg-blue-950/30">💬</div>
-                        <p class="mt-4 font-semibold text-zinc-900 dark:text-zinc-100">No incoming emails yet.</p>
+                        <p class="mt-4 font-semibold text-zinc-900 dark:text-zinc-100">No incoming support messages yet.</p>
                     </div>
                 @endforelse
             </div>
