@@ -64,24 +64,15 @@
                                         </div>
                                         <audio controls class="mt-4 w-full" src="{{ asset($message->audio_path) }}"></audio>
 
-                                        <div class="mt-4 border-t border-blue-200 pt-4 dark:border-blue-900/70">
-                                            @if ($message->transcription)
-                                                <details>
-                                                    <summary class="cursor-pointer list-none text-sm font-bold text-blue-700 underline decoration-blue-300 underline-offset-4 dark:text-blue-300">
-                                                        Show transcription
-                                                    </summary>
-                                                    <p class="mt-3 whitespace-pre-line rounded-2xl bg-white/80 p-4 text-sm leading-6 text-blue-950 dark:bg-blue-950/40 dark:text-blue-100">{{ $message->transcription }}</p>
-                                                    @if ($message->transcribed_at)
-                                                        <p class="mt-2 text-xs font-semibold text-blue-950/50 dark:text-blue-100/50">Transcribed {{ $message->transcribed_at->diffForHumans() }}</p>
-                                                    @endif
-                                                </details>
-                                            @else
-                                                <form method="POST" action="{{ route('dashboard.support-replies.transcribe', $message) }}">
-                                                    @csrf
-                                                    <flux:button size="sm" variant="primary" type="submit">Generate transcription</flux:button>
-                                                </form>
-                                            @endif
-                                        </div>
+                                        @if ($message->transcription)
+                                            <div class="mt-4 border-t border-blue-200 pt-4 dark:border-blue-900/70">
+                                                <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300">Transcription</p>
+                                                <p class="mt-3 whitespace-pre-line rounded-2xl bg-white/80 p-4 text-sm leading-6 text-blue-950 dark:bg-blue-950/40 dark:text-blue-100">{{ $message->transcription }}</p>
+                                                @if ($message->transcribed_at)
+                                                    <p class="mt-2 text-xs font-semibold text-blue-950/50 dark:text-blue-100/50">Transcribed {{ $message->transcribed_at->diffForHumans() }}</p>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
 

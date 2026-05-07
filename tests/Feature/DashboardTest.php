@@ -6,6 +6,7 @@ use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Transcription;
 
 function dashboardShopkeeper(): User
@@ -222,7 +223,10 @@ test('shopkeepers can draft a support reply directly on an incoming email once',
 });
 
 test('customers can submit a voice support message', function () {
+    Transcription::fake(['I would like to know when my lunchbox ships.']);
+
     File::deleteDirectory(public_path('uploads/support-audio'));
+    Storage::deleteDirectory('support-audio');
 
     $response = $this->postJson(route('support.voice-messages.store'), [
         'customer_name' => 'Mina from Production',
@@ -243,9 +247,14 @@ test('customers can submit a voice support message', function () {
         ->message->toBe('Voice message submitted from the support page.')
         ->audio_path->toStartWith('uploads/support-audio/')
         ->audio_mime_type->toBeIn(['audio/webm', 'video/webm'])
-        ->audio_size->toBeGreaterThan(0);
+        ->audio_size->toBeGreaterThan(0)
+        ->transcription->toBe('I would like to know when my lunchbox ships.')
+        ->transcribed_at->not->toBeNull();
 
     $this->assertFileExists(public_path($message->audio_path));
+    Storage::assertExists('support-audio/'.basename($message->audio_path));
+
+    Transcription::assertGenerated(fn ($prompt) => $prompt->audio->path === 'support-audio/'.basename($message->audio_path));
 });
 
 test('shopkeepers can play voice support messages in the dashboard', function () {
@@ -282,35 +291,7 @@ test('the support page shows the simplified voice recorder', function () {
     $response->assertDontSee('Send voice message');
 });
 
-test('shopkeepers can generate a voice message transcription with the Laravel AI SDK', function () {
-    Transcription::fake(['I would like to know when my lunchbox ships.']);
-
-    $user = dashboardShopkeeper();
-    File::ensureDirectoryExists(public_path('uploads/support-audio'));
-    File::put(public_path('uploads/support-audio/demo.webm'), 'fake audio bytes');
-
-    $message = SupportMessage::create([
-        'customer_name' => 'Mina from Production',
-        'customer_email' => 'mina@example.com',
-        'subject' => 'Voice support message',
-        'message' => 'Voice message submitted from the support page.',
-        'audio_path' => 'uploads/support-audio/demo.webm',
-        'audio_mime_type' => 'audio/webm',
-        'audio_size' => 2048,
-    ]);
-
-    $this->actingAs($user)
-        ->post(route('dashboard.support-replies.transcribe', $message))
-        ->assertRedirect();
-
-    expect($message->refresh())
-        ->transcription->toBe('I would like to know when my lunchbox ships.')
-        ->transcribed_at->not->toBeNull();
-
-    Transcription::assertGenerated(fn ($prompt) => $prompt->audio->path === public_path('uploads/support-audio/demo.webm'));
-});
-
-test('shopkeepers can expand an existing transcription next to the audio', function () {
+test('shopkeepers can see the transcription under the audio', function () {
     $user = dashboardShopkeeper();
 
     SupportMessage::create([
@@ -328,7 +309,7 @@ test('shopkeepers can expand an existing transcription next to the audio', funct
     $response = $this->actingAs($user)->get(route('dashboard.support-replies.index'));
 
     $response->assertOk();
-    $response->assertSee('Show transcription');
+    $response->assertSee('Transcription');
     $response->assertSee('I would like to know when my lunchbox ships.');
     $response->assertDontSee('Generate transcription');
 });

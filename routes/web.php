@@ -7,6 +7,7 @@ use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Ai\Transcription;
 
@@ -61,9 +62,16 @@ Route::post('/support/voice-messages', function (Request $request) {
     $extension = $audio->guessExtension() ?: 'webm';
     $filename = Str::uuid().'.'.$extension;
     $path = 'uploads/support-audio/'.$filename;
+    $storedPath = 'support-audio/'.$filename;
+
+    Storage::put($storedPath, File::get($audio->getRealPath()));
+
+    $transcription = Transcription::fromStorage($storedPath)
+        ->timeout(120)
+        ->generate();
 
     File::ensureDirectoryExists(public_path('uploads/support-audio'));
-    $audio->move(public_path('uploads/support-audio'), $filename);
+    File::copy($audio->getRealPath(), public_path($path));
 
     SupportMessage::create([
         'customer_name' => $validated['customer_name'],
@@ -73,6 +81,8 @@ Route::post('/support/voice-messages', function (Request $request) {
         'audio_path' => $path,
         'audio_mime_type' => $mimeType,
         'audio_size' => filesize(public_path($path)),
+        'transcription' => trim($transcription->text),
+        'transcribed_at' => now(),
     ]);
 
     return response()->json([
@@ -152,24 +162,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->get(),
         ]);
     })->name('dashboard.support-replies.index');
-
-    Route::post('dashboard/support-replies/{supportMessage}/transcribe', function (SupportMessage $supportMessage) {
-        abort_unless($supportMessage->audio_path, 404);
-
-        $response = Transcription::fromPath(
-            public_path($supportMessage->audio_path),
-            $supportMessage->audio_mime_type,
-        )
-            ->timeout(120)
-            ->generate();
-
-        $supportMessage->update([
-            'transcription' => trim($response->text),
-            'transcribed_at' => now(),
-        ]);
-
-        return back()->with('status', "Transcription added to {$supportMessage->customer_name}'s voice message.");
-    })->name('dashboard.support-replies.transcribe');
 
     Route::post('dashboard/support-replies/{supportMessage}/draft', function (Request $request, SupportMessage $supportMessage) {
         if ($supportMessage->draft_reply !== null) {
