@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Ai\Transcription;
 
 Route::get('/', function () {
     return view('shop.index', [
@@ -151,6 +152,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->get(),
         ]);
     })->name('dashboard.support-replies.index');
+
+    Route::post('dashboard/support-replies/{supportMessage}/transcribe', function (SupportMessage $supportMessage) {
+        abort_unless($supportMessage->audio_path, 404);
+
+        $response = Transcription::fromPath(
+            public_path($supportMessage->audio_path),
+            $supportMessage->audio_mime_type,
+        )
+            ->timeout(120)
+            ->generate();
+
+        $supportMessage->update([
+            'transcription' => trim($response->text),
+            'transcribed_at' => now(),
+        ]);
+
+        return back()->with('status', "Transcription added to {$supportMessage->customer_name}'s voice message.");
+    })->name('dashboard.support-replies.transcribe');
 
     Route::post('dashboard/support-replies/{supportMessage}/draft', function (Request $request, SupportMessage $supportMessage) {
         if ($supportMessage->draft_reply !== null) {
