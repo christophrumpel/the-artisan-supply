@@ -145,7 +145,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard/support-replies', function () {
         return view('dashboard.support-replies', [
-            'supportMessages' => SupportMessage::latest()->get(),
+            'supportMessages' => SupportMessage::query()
+                ->whereNotNull('audio_path')
+                ->latest()
+                ->get(),
         ]);
     })->name('dashboard.support-replies.index');
 

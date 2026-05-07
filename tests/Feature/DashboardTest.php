@@ -71,7 +71,7 @@ test('the separate product images page is removed', function () {
     $this->actingAs($user)->get('/dashboard/images')->assertNotFound();
 });
 
-test('authenticated users can visit the support replies page without the knowledge base list', function () {
+test('authenticated users only see voice messages on the support replies page', function () {
     $user = dashboardShopkeeper();
 
     Faq::create([
@@ -86,12 +86,23 @@ test('authenticated users can visit the support replies page without the knowled
         'message' => 'Is this expected or did it get stuck in a queue?',
     ]);
 
+    SupportMessage::create([
+        'customer_name' => 'Mina from Production',
+        'customer_email' => 'mina@example.com',
+        'subject' => 'Voice support message',
+        'message' => 'Voice message submitted from the support page.',
+        'audio_path' => 'uploads/support-audio/demo.webm',
+        'audio_mime_type' => 'audio/webm',
+        'audio_size' => 2048,
+    ]);
+
     $response = $this->actingAs($user)->get(route('dashboard.support-replies.index'));
 
     $response->assertOk();
     $response->assertSee('Support replies');
-    $response->assertSee('Nuno from Localhost');
-    $response->assertSee('Draft reply');
+    $response->assertSee('Mina from Production');
+    $response->assertSee('Recorded audio');
+    $response->assertDontSee('Nuno from Localhost');
     $response->assertDontSee('Most orders ship within 2-3 business days');
 });
 
