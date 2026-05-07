@@ -256,3 +256,16 @@ test('shopkeepers can play voice support messages in the dashboard', function ()
     $response->assertSee('uploads/support-audio/demo.webm');
     $response->assertSee('2.0 KB');
 });
+
+test('the support page shows the simplified voice recorder', function () {
+    $response = $this->get(route('support'));
+
+    $response->assertOk();
+    $response->assertSee('Record a message for the support team.');
+    $response->assertSee('Name');
+    $response->assertSee('Email');
+    $response->assertSee('Start recording');
+    $response->assertDontSee('Subject');
+    $response->assertDontSee('Short note');
+    $response->assertDontSee('Send voice message');
+});
