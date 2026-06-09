@@ -1,6 +1,6 @@
 <?php
 
-use App\Ai\DashboardAssistant;
+use App\Ai\Agents\DashboardAgent;
 use App\Models\Faq;
 use App\Models\Product;
 use App\Models\ProductAsset;
@@ -92,13 +92,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard');
 
-    Route::post('dashboard/assistant', function (Request $request, DashboardAssistant $assistant) {
+    Route::post('dashboard/assistant', function (Request $request, DashboardAgent $agent) {
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:1000'],
         ]);
 
         try {
-            $response = $assistant->prompt($validated['message']);
+            $response = $agent->prompt($validated['message']);
         } catch (Throwable $exception) {
             Log::warning('Dashboard assistant failed.', [
                 'message' => $exception->getMessage(),

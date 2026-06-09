@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\Agents\DashboardAgent;
 use App\Ai\Tools\ShopMetricsTool;
 use App\Models\Faq;
 use App\Models\Product;
@@ -7,7 +8,6 @@ use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Laravel\Ai\AnonymousAgent;
 use Laravel\Ai\Tools\Request;
 
 function dashboardShopkeeper(): User
@@ -66,7 +66,7 @@ test('guests cannot use the dashboard assistant', function () {
 test('shopkeepers can ask the dashboard assistant', function () {
     $user = dashboardShopkeeper();
 
-    AnonymousAgent::fake([
+    DashboardAgent::fake([
         'You have 1 product, 2 support messages, and 3 FAQ entries.',
     ])->preventStrayPrompts();
 
@@ -78,7 +78,7 @@ test('shopkeepers can ask the dashboard assistant', function () {
         ->assertOk()
         ->assertJsonPath('message', 'You have 1 product, 2 support messages, and 3 FAQ entries.');
 
-    AnonymousAgent::assertPrompted('How many support questions do we have?');
+    DashboardAgent::assertPrompted('How many support questions do we have?');
 });
 
 test('the shop metrics tool returns current dashboard counts', function () {
