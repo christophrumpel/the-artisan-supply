@@ -1,13 +1,16 @@
 <?php
 
+use App\Ai\DashboardAssistant;
 use App\Models\Faq;
 use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Laravel\Ai\Image;
 
 Route::get('/', function () {
     return view('shop.index', [
@@ -89,6 +92,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard');
 
+    Route::post('dashboard/assistant', function (Request $request, DashboardAssistant $assistant) {
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $response = $assistant->prompt($validated['message']);
+        } catch (Throwable $exception) {
+            Log::warning('Dashboard assistant failed.', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'The assistant could not answer right now. Check the AI provider configuration and try again.',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => (string) $response,
+        ]);
+    })->name('dashboard.assistant');
+
     Route::get('dashboard/assets', function () {
         return view('dashboard.assets', [
             'products' => Product::query()->orderByDesc('featured')->orderBy('name')->get(),
@@ -129,6 +154,48 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return back()->with('status', 'Asset uploaded. Metadata is ready to edit.');
     })->name('dashboard.assets.store');
+
+    Route::post('dashboard/assets/generate', function (Request $request) {
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'prompt' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $product = Product::findOrFail($validated['product_id']);
+        $prompt = <<<PROMPT
+Create a square product image for The Artisan Supply.
+Product: {$product->name}
+Tagline: {$product->tagline}
+Style: playful premium Laravel merch, clean studio lighting, no text in the image.
+Request: {$validated['prompt']}
+PROMPT;
+
+        $image = Image::of($prompt)
+            ->square()
+            ->quality('high')
+            ->generate();
+
+        $generatedImage = $image->firstImage();
+        $filename = Str::uuid().'.png';
+        $path = 'uploads/assets/'.$filename;
+
+        File::ensureDirectoryExists(public_path('uploads/assets'));
+        File::put(public_path($path), $generatedImage->content());
+
+        ProductAsset::create([
+            'product_id' => $product->id,
+            'filename' => $filename,
+            'file_path' => $path,
+            'mime_type' => $generatedImage->mime ?? 'image/png',
+            'size' => filesize(public_path($path)),
+            'title' => $product->name.' generated image',
+            'description' => 'Generated product visual for '.$product->name.'.',
+            'alt_text' => $validated['prompt'],
+            'prompt' => $prompt,
+        ]);
+
+        return back()->with('status', 'Image generated and saved to the asset library.');
+    })->name('dashboard.assets.generate');
 
     Route::patch('dashboard/assets/{productAsset}', function (Request $request, ProductAsset $productAsset) {
         $validated = $request->validate([

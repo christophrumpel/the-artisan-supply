@@ -102,6 +102,8 @@
 
         {{ $slot }}
 
+        @include('components.dashboard.assistant')
+
         @persist('toast')
             <flux:toast.group>
                 <flux:toast />

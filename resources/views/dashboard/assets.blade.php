@@ -32,7 +32,7 @@
                 </div>
             </div>
 
-            <div class="grid gap-6 xl:grid-cols-[22rem_1fr]">
+            <div class="grid gap-6 xl:grid-cols-[22rem_22rem_1fr]">
                 <form class="h-fit overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900" method="POST" action="{{ route('dashboard.assets.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="border-b border-zinc-100 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
@@ -80,6 +80,32 @@
                         </div>
 
                         <flux:button class="w-full" variant="primary" type="submit">Upload asset</flux:button>
+                    </div>
+                </form>
+
+                <form class="h-fit overflow-hidden rounded-[1.75rem] border border-red-200 bg-red-50/70 shadow-sm dark:border-red-950 dark:bg-red-950/20" method="POST" action="{{ route('dashboard.assets.generate') }}">
+                    @csrf
+                    <div class="border-b border-red-100 bg-white/70 px-5 py-4 dark:border-red-950 dark:bg-zinc-900/70">
+                        <p class="text-sm font-bold uppercase tracking-[0.18em] text-red-500">Generate image</p>
+                        <p class="mt-1 text-sm text-zinc-500">Describe the missing product visual and save it as an asset.</p>
+                    </div>
+
+                    <div class="space-y-4 p-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500" for="generated_product_id">Product</label>
+                            <select id="generated_product_id" name="product_id" class="mt-2 w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-sm dark:border-red-950 dark:bg-zinc-900">
+                                @foreach ($products as $product)
+                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500" for="prompt">Prompt</label>
+                            <textarea id="prompt" name="prompt" rows="4" class="mt-2 w-full rounded-xl border border-red-200 bg-white px-3 py-2.5 text-sm dark:border-red-950 dark:bg-zinc-900" placeholder="A cozy studio photo of the Queue Worker Lunchbox beside a laptop..."></textarea>
+                        </div>
+
+                        <flux:button class="w-full" variant="primary" type="submit">Generate product image</flux:button>
                     </div>
                 </form>
 
