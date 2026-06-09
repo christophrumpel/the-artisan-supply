@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -89,8 +90,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'supportMessageCount' => SupportMessage::count(),
             'draftedReplyCount' => SupportMessage::query()->whereNotNull('draft_reply')->count(),
             'faqCount' => Faq::count(),
+            'nightwatchConnected' => Cache::has('mcp_nightwatch_token'),
         ]);
     })->name('dashboard');
+
+    Route::get('dashboard/nightwatch/connect', function () {
+        return redirect()->route('mcp.oauth.nightwatch.connect');
+    })->name('dashboard.nightwatch.connect');
 
     Route::post('dashboard/assistant', function (Request $request, DashboardAgent $agent) {
         $validated = $request->validate([

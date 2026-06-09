@@ -13,6 +13,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-bold text-zinc-950 dark:text-white">Nightwatch MCP</p>
+                            <p class="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                                {{ $nightwatchConnected ? 'Connected. The dashboard assistant can use Nightwatch MCP tools.' : 'Connect once to let the dashboard assistant use Nightwatch MCP tools.' }}
+                            </p>
+                        </div>
+
+                        <span class="rounded-full px-2.5 py-1 text-xs font-bold {{ $nightwatchConnected ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                            {{ $nightwatchConnected ? 'Connected' : 'Not connected' }}
+                        </span>
+                    </div>
+
+                    @if (! $nightwatchConnected)
+                        <flux:button class="mt-4" variant="primary" icon="link" :href="route('dashboard.nightwatch.connect')">
+                            Connect Nightwatch
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </x-layouts::app>

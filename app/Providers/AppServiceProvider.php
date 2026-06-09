@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Mcp\Client;
+use Laravel\Mcp\Facades\Mcp;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureMcpClients();
     }
 
     /**
@@ -46,5 +49,10 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function configureMcpClients(): void
+    {
+        Mcp::registerClient('nightwatch', fn () => Client::web('https://nightwatch.laravel.com/mcp')->withOAuth());
     }
 }

@@ -3,12 +3,14 @@
 namespace App\Ai\Agents;
 
 use App\Ai\Tools\ShopMetricsTool;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
+use Laravel\Mcp\Facades\Mcp;
 use Stringable;
 
 class DashboardAgent implements Agent, Conversational, HasTools
@@ -37,8 +39,19 @@ INSTRUCTIONS;
      */
     public function tools(): iterable
     {
-        return [
+        $tools = [
             new ShopMetricsTool,
+        ];
+
+        if (! Cache::has('mcp_nightwatch_token')) {
+            return $tools;
+        }
+
+        return [
+            ...$tools,
+            ...Mcp::client('nightwatch')
+                ->withToken(fn (): string => Cache::get('mcp_nightwatch_token', ''))
+                ->tools(default: []),
         ];
     }
 }

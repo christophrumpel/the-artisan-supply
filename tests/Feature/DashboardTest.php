@@ -8,6 +8,7 @@ use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Ai\Tools\Request;
 
 function dashboardShopkeeper(): User
@@ -32,6 +33,10 @@ function dashboardProduct(array $attributes = []): Product
     ]);
 }
 
+beforeEach(function () {
+    Cache::forget('mcp_nightwatch_token');
+});
+
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('login'));
@@ -53,8 +58,22 @@ test('authenticated users can visit the dashboard overview', function () {
     $response->assertSee('The Artisan Supply dashboard');
     $response->assertSee('The Artisan Supply dashboard');
     $response->assertSee('Dashboard assistant');
+    $response->assertSee('Nightwatch MCP');
+    $response->assertSee('Connect Nightwatch');
     $response->assertDontSee('Product images');
     $response->assertDontSee('Generate placeholder image');
+});
+
+test('shopkeepers can start the nightwatch mcp oauth flow', function () {
+    $user = dashboardShopkeeper();
+
+    $this->actingAs($user)
+        ->get(route('dashboard.nightwatch.connect'))
+        ->assertRedirect(route('mcp.oauth.nightwatch.connect'));
+});
+
+test('the dashboard agent only loads nightwatch tools after connection', function () {
+    expect((new DashboardAgent)->tools())->toHaveCount(1);
 });
 
 test('guests cannot use the dashboard assistant', function () {
