@@ -1,11 +1,14 @@
 <?php
 
+use App\Ai\Agents\DashboardAgent;
+use App\Ai\Tools\ShopMetricsTool;
 use App\Models\Faq;
 use App\Models\Product;
 use App\Models\ProductAsset;
 use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Laravel\Ai\Tools\Request;
 
 function dashboardShopkeeper(): User
 {
@@ -49,8 +52,79 @@ test('authenticated users can visit the dashboard overview', function () {
     $response->assertOk();
     $response->assertSee('The Artisan Supply dashboard');
     $response->assertSee('The Artisan Supply dashboard');
+    $response->assertSee('Dashboard assistant');
     $response->assertDontSee('Product images');
     $response->assertDontSee('Generate placeholder image');
+});
+
+test('guests cannot use the dashboard assistant', function () {
+    $this->postJson(route('dashboard.assistant'), [
+        'message' => 'How many products do we have?',
+    ])->assertUnauthorized();
+});
+
+test('shopkeepers can ask the dashboard assistant', function () {
+    $user = dashboardShopkeeper();
+
+    DashboardAgent::fake([
+        'You have 1 product, 2 support messages, and 3 FAQ entries.',
+    ])->preventStrayPrompts();
+
+    $response = $this->actingAs($user)->postJson(route('dashboard.assistant'), [
+        'message' => 'How many support questions do we have?',
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('message', 'You have 1 product, 2 support messages, and 3 FAQ entries.');
+
+    DashboardAgent::assertPrompted('How many support questions do we have?');
+});
+
+test('the shop metrics tool returns current dashboard counts', function () {
+    $product = dashboardProduct(['featured' => true, 'inventory' => 8]);
+
+    ProductAsset::create([
+        'product_id' => $product->id,
+        'filename' => 'hero-shot.png',
+        'file_path' => 'uploads/assets/hero-shot.png',
+        'mime_type' => 'image/png',
+        'size' => 12345,
+    ]);
+
+    Faq::create([
+        'question' => 'When does this ship?',
+        'answer' => 'Most orders ship within 2-3 business days.',
+    ]);
+
+    SupportMessage::create([
+        'customer_name' => 'Nuno',
+        'customer_email' => 'nuno@example.com',
+        'subject' => 'Shipping',
+        'message' => 'When will this ship?',
+    ]);
+
+    SupportMessage::create([
+        'customer_name' => 'Mina',
+        'customer_email' => 'mina@example.com',
+        'subject' => 'Voice question',
+        'message' => 'Voice message submitted from the support page.',
+        'audio_path' => 'uploads/support-audio/demo.webm',
+        'draft_reply' => 'Thanks for reaching out.',
+    ]);
+
+    $metrics = json_decode((new ShopMetricsTool)->handle(new Request), true);
+
+    expect($metrics)
+        ->products->toBe(1)
+        ->featured_products->toBe(1)
+        ->total_inventory->toBe(8)
+        ->product_assets->toBe(1)
+        ->support_messages->toBe(2)
+        ->voice_support_messages->toBe(1)
+        ->support_messages_without_draft_reply->toBe(1)
+        ->drafted_support_replies->toBe(1)
+        ->faq_entries->toBe(1);
 });
 
 test('authenticated users can visit the assets manager page', function () {
